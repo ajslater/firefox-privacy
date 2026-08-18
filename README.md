@@ -11,6 +11,7 @@ Portable setup for a privacy-hardened Firefox profile on macOS:
 | `setup-firefox-hardened.sh` | One-shot provisioning: creates the profile, installs arkenfox + overrides + uBlock Origin |
 | `update-firefox-hardened.sh` | Regular maintenance: re-syncs overrides, updates arkenfox user.js |
 | `user-overrides.js` | Canonical copy of the overrides, appended to user.js by the arkenfox updater |
+| `check-arkenfox-update.sh` | Optional: daily launchd check that fires a macOS notification when arkenfox publishes a new user.js |
 
 ## New machine runbook
 
@@ -64,6 +65,23 @@ by removed or renamed arkenfox entries:
 ```bash
 ./update-firefox-hardened.sh --clean
 ```
+
+### Update notifications
+
+arkenfox releases irregularly (roughly 2–4 times a year). To get a macOS
+notification when a new version lands, install the daily check once per machine:
+
+```bash
+./check-arkenfox-update.sh --install
+```
+
+It compares the profile's `user.js` version header against arkenfox master at
+noon daily (or at wake), notifies once per new version, and stays silent
+offline. The first notification may need a one-time allow for **Script Editor**
+under System Settings → Notifications. Remove with `--uninstall`; logs in
+`~/Library/Logs/arkenfox-update-check.log`. Passive alternative: subscribe to
+<https://github.com/arkenfox/user.js/releases.atom> in an RSS reader, or GitHub
+Watch → Custom → Releases.
 
 ## Changing settings
 
