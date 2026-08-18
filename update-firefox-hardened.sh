@@ -8,40 +8,33 @@
 # uBlock Origin updates itself through Firefox's normal add-on updates.
 set -euo pipefail
 
-PROFILES_DIR="$HOME/Library/Application Support/Firefox/Profiles"
-PROFILE_NAME="hardened"
-ARKENFOX_RAW="https://raw.githubusercontent.com/arkenfox/user.js/master"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$REPO_DIR/lib.sh"
 
-if pgrep -xq firefox; then
-  echo "Quit Firefox before updating (it rewrites prefs.js on exit)." >&2
-  exit 1
-fi
+CLEAN=false
+case "${1:-}" in
+"") ;;
+--clean) CLEAN=true ;;
+*) die "Usage: $(basename "$0") [--clean]" ;;
+esac
+[ $# -le 1 ] || die "Usage: $(basename "$0") [--clean]"
 
-shopt -s nullglob
-profiles=("$PROFILES_DIR"/*."$PROFILE_NAME")
-if [ ${#profiles[@]} -eq 0 ]; then
-  echo "No *.$PROFILE_NAME profile found — run setup-firefox-hardened.sh first." >&2
-  exit 1
-elif [ ${#profiles[@]} -gt 1 ]; then
-  echo "Multiple *.$PROFILE_NAME profiles found:" >&2
-  printf '  %s\n' "${profiles[@]}" >&2
-  exit 1
-fi
-PROFILE="${profiles[0]}"
+find_profile ||
+  die "No *.$PROFILE_NAME profile found — run setup-firefox-hardened.sh first."
 echo "Profile: $PROFILE"
+require_profile_closed
 
-cp "$REPO_DIR/user-overrides.js" "$PROFILE/user-overrides.js"
+install_arkenfox
 
-for f in updater.sh prefsCleaner.sh; do
-  curl -fsSL "$ARKENFOX_RAW/$f" -o "$PROFILE/$f"
-  chmod +x "$PROFILE/$f"
-done
-bash "$PROFILE/updater.sh" -p "$PROFILE" -s -d
-
-if [ "${1:-}" = "--clean" ]; then
-  # prefsCleaner works on the profile in its own directory; -s skips the prompt
-  (cd "$PROFILE" && bash prefsCleaner.sh -s)
+if $CLEAN; then
+  # prefsCleaner's own in-use check waits on a 'lock' file that Firefox never
+  # creates on macOS, so it will rewrite prefs.js right under a running browser.
+  # Re-check here: the guard above is two downloads and an updater run old.
+  require_profile_closed
+  # -s: skip the prompt. -d: skip its self-update, we just fetched it.
+  (cd "$PROFILE" && bash prefsCleaner.sh -s -d)
+  prune_backups "$PROFILE/prefsjs_backups"
 fi
 
 echo "Update complete."
