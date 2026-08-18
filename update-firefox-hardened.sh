@@ -27,7 +27,7 @@ require_profile_closed
 
 install_arkenfox
 
-if $CLEAN; then
+if "$CLEAN"; then
   # prefsCleaner's own in-use check waits on a 'lock' file that Firefox never
   # creates on macOS, so it will rewrite prefs.js right under a running browser.
   # Re-check here: the guard above is two downloads and an updater run old.

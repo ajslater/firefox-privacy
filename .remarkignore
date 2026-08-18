@@ -1,0 +1,17 @@
+__pycache__
+.*cache/
+.circleci
+.claude
+.git
+.venv
+*.sh
+*Dockerfile
+bun.lock
+dist
+node_modules
+test-results
+tests/**/*.json
+tests/**/*.xml
+tests/**/*.yaml
+tests/**/*.yml
+uv.lock

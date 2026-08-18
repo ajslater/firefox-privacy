@@ -54,7 +54,7 @@ fetch() {
     rm -f "$tmp"
     die "Download failed: $url"
   fi
-  if [ -n "$validate" ] && ! "$validate" "$tmp"; then
+  if [ "$validate" != "" ] && ! "$validate" "$tmp"; then
     rm -f "$tmp"
     die "Download failed its $validate check (truncated, or not the file we asked for): $url"
   fi
